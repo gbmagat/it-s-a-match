@@ -1,0 +1,842 @@
+/* Responsive layout (Stage.jsx). Two kinds of sizes:
+   - design px on the 1440x1024 PDF canvas, inside a .block (scaled as a whole);
+   - fluid parts (header, chat box, terms, thank-you page): the PDF's px times
+     --u, the window's scale (1 at 1440x1024), written calc(N * var(--px)). */
+
+:root {
+  --u: 1;
+  --px: calc(var(--u) * 1px);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #f6f1e7;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Backgrounds (stay mounted while pages change) ---- */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-cream { background: #f6f1e7; }
+/* The puzzle tile is the canvas and its mirror images (2x2), lined up with the
+   centre of the window as the PDF lines it up with the centre of the canvas. */
+.bg-puzzle {
+  background-color: #f6f1e7;
+  background-repeat: repeat;
+  background-size: calc(2880 * var(--px)) calc(2048 * var(--px));
+  background-position: calc(50% + 720 * var(--px)) 0;
+}
+.bg-photo {
+  position: absolute;
+  display: block;
+  max-width: none;
+  user-select: none;
+}
+.bg-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- Page shell: header + page ---- */
+.shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.site-header {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  height: calc(102.4 * var(--px));
+  overflow: hidden;
+}
+.site-header-bg {
+  position: absolute;
+  left: calc(-32.1 * var(--px));
+  top: calc(-7.5 * var(--px));
+  width: calc(100% + 37.9 * var(--px));
+  height: calc(109.9 * var(--px));
+  display: block;
+  max-width: none;
+}
+.brand {
+  position: absolute;
+  left: calc(45.5 * var(--px));
+  top: calc(24.5 * var(--px));
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f6f1e7;
+  font: inherit;
+  text-align: left;
+  transition: opacity 0.2s ease;
+}
+button.brand { cursor: pointer; }
+.brand-logo {
+  display: block;
+  width: calc(65.5 * var(--px));
+  height: calc(54.5 * var(--px));
+}
+.brand-text {
+  margin: calc(-1 * var(--px)) 0 0 calc(17 * var(--px));
+  color: #f6f1e7;
+  font: 700 calc(44.04 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.0835em;
+  white-space: nowrap;
+}
+.site-nav {
+  position: absolute;
+  right: calc(78.15 * var(--px));
+  top: calc(25.55 * var(--px));
+  display: flex;
+  gap: calc(67.1 * var(--px));
+}
+.site-nav button {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f6f1e7;
+  font: 400 calc(34.24 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.093em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* Header links: a cream underline slides in. */
+.site-nav button::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0.093em;
+  bottom: 0.08em;
+  height: max(2px, calc(3 * var(--px)));
+  border-radius: 2px;
+  background: #f6f1e7;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.site-nav button:active::after { transform: scaleX(1); }
+/* Log out: an icon in the header's corner, centred between "home" and the
+   window edge, so the links stay exactly where the PDF has them. */
+.site-nav .nav-icon {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 1.302em;
+  margin-left: calc(21.75 * var(--px));
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.site-nav .nav-icon svg { display: block; width: 1.05em; height: 1.05em; }
+.site-nav .nav-icon::after { content: none; }
+.site-nav .nav-icon:active { opacity: 0.7; transform: scale(0.94); }
+.brand:active { opacity: 0.75; }
+.site-nav button:focus-visible,
+.brand:focus-visible { outline: 3px solid #f6f1e7; outline-offset: 4px; border-radius: 4px; }
+
+/* Content under the header. It scrolls when the window is too short; a child
+   with auto margins is centred without ever being cut off at the top. */
+.page {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.page > :first-child { margin-top: auto; }
+.page > :last-child { margin-bottom: auto; }
+/* Chat and terms: the white box fills the page with the PDF's margins. */
+.page-fill {
+  overflow: hidden;
+  align-items: stretch;
+  padding: calc(69.35 * var(--px)) calc(102.75 * var(--px)) calc(85.25 * var(--px)) calc(102.5 * var(--px));
+}
+.page-fill > :first-child { margin: 0; }
+
+/* ---- A designed scene: a region of the PDF canvas, scaled (Block) ---- */
+.block-wrap {
+  flex: none;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.block { position: relative; flex: none; }
+.block-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1440px;
+  height: 1024px;
+  transform-origin: 0 0;
+  pointer-events: none; /* the canvas spills past its region; only controls take clicks */
+  /* Cut off below the region (height set by Block): hover lifts and the card
+     shuffle scale whole-canvas layers, which would otherwise poke past the
+     bottom of the page and make a scrollbar flicker in. Sideways stays open
+     so the swiped card can fly off past the canvas. */
+  overflow-x: visible;
+  overflow-y: clip;
+}
+.block-inner .zone,
+.block-inner .field,
+.block-inner .cal { pointer-events: auto; }
+
+.layer {
+  position: absolute;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Real text over the artwork (TextLayer.jsx) */
+.text-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+}
+.text-layer text { font-variant-ligatures: none; }
+.t-dm { font-family: 'DM Sans', sans-serif; }
+.t-fraunces {
+  font-family: 'Fraunces Variable', serif;
+  font-style: italic;
+  font-variation-settings: 'opsz' 9, 'SOFT' 0, 'WONK' 1;
+}
+.t-garet { font-family: 'Montserrat', sans-serif; } /* stands in for Garet (not a free web font) */
+
+/* Invisible buttons over controls drawn in the plates */
+.zone {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 0.15s ease;
+}
+.zone:focus-visible { outline: 4px solid #7c0a22; outline-offset: 4px; }
+
+/* ---- Hover and press ----
+   .lift (Lift in Stage.jsx) wraps a control's artwork + text + click area, so
+   the whole button moves. Hover effects only where there is a real pointer;
+   phones get the press effect. */
+.lift {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.25s ease, opacity 0.2s ease;
+}
+.lift .zone { pointer-events: auto; transition: none; }
+.lift:active { transform: scale(0.97); transition-duration: 0.08s; }
+.lift-link:active { transform: none; opacity: 0.55; }
+
+/* Sign up */
+.field {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 10px;
+  outline: 0;
+  background: transparent;
+  color: #f6f1e7;
+  caret-color: #f6f1e7;
+  font: 400 29.33px/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.01em;
+  transition: box-shadow 0.15s ease;
+}
+.field-bio {
+  padding: 12px 17px;
+  resize: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.field:focus { box-shadow: 0 0 0 4px rgba(246, 241, 231, 0.3); }
+.field-age { cursor: default; } /* filled in from the birth date */
+.field::placeholder { color: transparent; }
+.field:focus::placeholder { color: rgba(246, 241, 231, 0.5); }
+.field:-webkit-autofill {
+  -webkit-text-fill-color: #f6f1e7;
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+.form-error {
+  position: absolute;
+  left: 0;
+  width: 1440px;
+  margin: 0;
+  text-align: center;
+  color: #7c0a22;
+  font: 700 26px/1.3 'DM Sans', sans-serif;
+  letter-spacing: -0.03em;
+}
+
+/* Birth-date calendar (DatePicker.jsx): the site's cream, wine and rose.
+   Sizes are in em, so one font-size sets the scale (desktop / phone). */
+.cal {
+  position: absolute;
+  z-index: 10;
+  box-sizing: border-box;
+  width: 15.4em;
+  padding: 0.85em 0.9em 0.9em;
+  border: 0.11em solid #7c0a22;
+  border-radius: 0.75em;
+  background: #f6f1e7;
+  box-shadow: 0 0.6em 1.6em rgba(59, 55, 55, 0.3);
+  color: #7c0a22;
+  font-family: 'DM Sans', sans-serif;
+  animation: cal-in 0.16s ease-out both;
+}
+.cal-desktop { font-size: 28px; }
+@keyframes cal-in {
+  from { opacity: 0; transform: translateY(-0.3em); }
+  to { opacity: 1; transform: none; }
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45em;
+}
+.cal-title,
+.cal-arrow {
+  margin: 0;
+  border: 0;
+  background: none;
+  color: #7c0a22;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.cal-title {
+  padding: 0.25em 0.55em;
+  border-radius: 0.4em;
+  font: 700 0.95em/1.2 'DM Sans', sans-serif;
+  letter-spacing: -0.06em;
+}
+.cal-title:disabled { cursor: default; }
+.cal-arrow {
+  width: 1.6em;
+  height: 1.6em;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0.85em;
+}
+.cal-arrow:disabled { opacity: 0.25; cursor: default; }
+.cal-grid { display: grid; gap: 0.12em; }
+.cal-grid-days { grid-template-columns: repeat(7, 1fr); }
+.cal-grid-wide { grid-template-columns: repeat(3, 1fr); gap: 0.3em; }
+.cal-dow {
+  padding: 0.2em 0 0.35em;
+  text-align: center;
+  color: #af6777;
+  font: 700 0.6em/1 'DM Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+.cal-cell {
+  height: 1.62em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.81em;
+  background: none;
+  color: #3b3737;
+  font: 400 0.72em/1 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+.cal-cell.cal-wide {
+  height: 2.2em;
+  border-radius: 0.55em;
+  font-size: 0.74em;
+  letter-spacing: -0.03em;
+}
+.cal-cell.is-today { box-shadow: inset 0 0 0 0.09em #af6777; }
+.cal-cell.is-selected {
+  background: linear-gradient(90deg, #7b0b23, #af6777);
+  color: #f6f1e7;
+  font-weight: 700;
+}
+.cal-cell:disabled { color: rgba(59, 55, 55, 0.25); cursor: default; }
+.cal button:focus-visible { outline: 0.1em solid #af6777; outline-offset: 0.05em; }
+
+/* Swipe: "finding a match" shuffle. Its length is TIMING.swipe (design.js), set as --swipe-dur on .swipe.
+   The three cards (artwork + name, each a full-canvas layer) rotate places like
+   a carousel three times: left -> front, front -> right, right -> behind -> left.
+   After three rounds every card is home again, i.e. exactly the PDF layout;
+   the front card pulses, then swipes right.
+   Card centres (design px): left 445, front 720, right 981 (all at y 550);
+   the front card is the side card at 1.4567x.
+   Stacking: crossing behind 0, sides 1, glow 2 (fades the side cards), front 3. */
+.swipe { position: absolute; inset: 0; pointer-events: none; }
+.sw-card { position: absolute; left: 0; top: 0; width: 1440px; height: 1024px; }
+.sw-left { transform-origin: 445px 550px; z-index: 1; }
+.sw-center { transform-origin: 720px 550px; z-index: 3; }
+.sw-right { transform-origin: 981px 550px; z-index: 1; }
+.sw-glow { z-index: 2; }
+.swipe.playing .sw-left { animation: sw-l var(--swipe-dur) cubic-bezier(0.45, 0, 0.25, 1) both, sw-l-z var(--swipe-dur) steps(1, end) both; }
+.swipe.playing .sw-center { animation: sw-c var(--swipe-dur) cubic-bezier(0.45, 0, 0.25, 1) both, sw-c-z var(--swipe-dur) steps(1, end) both; }
+.swipe.playing .sw-right { animation: sw-r var(--swipe-dur) cubic-bezier(0.45, 0, 0.25, 1) both, sw-r-z var(--swipe-dur) steps(1, end) both; }
+.swipe.playing .sw-glow { animation: sw-glow var(--swipe-dur) ease both; }
+/* rounds: 10-24%, 27-41%, 44-58%; pulse 62-74%; exit from 80% */
+@keyframes sw-l {
+  0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+  10% { opacity: 1; transform: none; }
+  24%, 27% { opacity: 1; transform: translateX(275px) scale(1.4567); }
+  41%, 44% { opacity: 1; transform: translateX(536px); }
+  58%, 82% { opacity: 1; transform: none; }
+  95%, 100% { opacity: 0; transform: translateX(200px) scale(0.95); }
+}
+@keyframes sw-c {
+  0% { opacity: 0; transform: translateY(46px) scale(0.94); }
+  10% { opacity: 1; transform: none; }
+  24%, 27% { opacity: 1; transform: translateX(261px) scale(0.6865); }
+  41%, 44% { opacity: 1; transform: translateX(-275px) scale(0.6865); }
+  58%, 62% { opacity: 1; transform: none; }
+  68% { opacity: 1; transform: scale(1.035); }
+  74%, 80% { opacity: 1; transform: none; }
+  93%, 100% { opacity: 0; transform: translateX(760px) rotate(16deg); }
+}
+@keyframes sw-r {
+  0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+  10% { opacity: 1; transform: none; }
+  24%, 27% { opacity: 1; transform: translateX(-536px); }
+  41%, 44% { opacity: 1; transform: translateX(-261px) scale(1.4567); }
+  58%, 82% { opacity: 1; transform: none; }
+  95%, 100% { opacity: 0; transform: translateX(-200px) scale(0.95); }
+}
+/* Front/back switches happen halfway through each move. */
+@keyframes sw-l-z { 0% { z-index: 1; } 17% { z-index: 3; } 34% { z-index: 1; } 44% { z-index: 0; } 58%, 100% { z-index: 1; } }
+@keyframes sw-c-z { 0% { z-index: 3; } 17% { z-index: 1; } 27% { z-index: 0; } 41% { z-index: 1; } 51%, 100% { z-index: 3; } }
+@keyframes sw-r-z { 0% { z-index: 1; } 10% { z-index: 0; } 24% { z-index: 1; } 34% { z-index: 3; } 51%, 100% { z-index: 1; } }
+@keyframes sw-glow {
+  0% { opacity: 0; }
+  10%, 80% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+.pop-in { animation: pop-in 0.75s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; transform-origin: 50% 50%; }
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.35); }
+  60% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.fade-in { animation: fade-in 0.5s ease both; }
+.match-art { position: absolute; inset: 0; pointer-events: none; transform-origin: 720px 560px; }
+.match-in { animation: match-in 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+@keyframes match-in {
+  from { opacity: 0.35; transform: scale(0.92); } /* never an empty frame between pages */
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Match hub */
+/* Finished Text Style: the card is darkened and takes no clicks. */
+.card-done {
+  position: absolute;
+  background: rgba(35, 4, 12, 0.5);
+  transition: background-color 0.3s ease;
+}
+.choose-error { top: 812px; }
+.hub-toast {
+  position: absolute;
+  left: 0;
+  top: 868px;
+  width: 1440px;
+  text-align: center;
+  color: #7c0a22;
+  font: 700 30px/1.3 'DM Sans', sans-serif;
+  letter-spacing: -0.04em;
+  animation: toast 2.4s ease both;
+  pointer-events: none;
+}
+@keyframes toast {
+  0% { opacity: 0; transform: translateY(8px); }
+  10%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+
+/* ---- White box with the wine border: chat (p9 / p10) and terms (p2) ----
+   Measured on the PDF: border box x 102.5-1337.25, y 171.75-938.75. Everything
+   inside is placed from the box's inner edges, so it stretches with the window. */
+.panel,
+.chat {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  box-sizing: border-box;
+  border: calc(4.5 * var(--px)) solid #7c0a22;
+  border-radius: calc(18 * var(--px));
+  background: #fff;
+  box-shadow: calc(16 * var(--px)) calc(16 * var(--px)) calc(16 * var(--px)) rgba(0, 0, 0, 0.19); /* fitted to the PDF */
+}
+
+/* Privacy Policy, measured from the team's design (2026-10-24): sizes, letter
+   spacing and baselines fitted to its ink; spacing between blocks puts each
+   baseline where the design has it. */
+.terms {
+  overflow-y: auto;
+  padding: calc(40 * var(--px)) calc(47.4 * var(--px)) calc(30 * var(--px)) calc(45 * var(--px));
+  color: #000;
+}
+.terms-title {
+  margin: 0;
+  font: 700 calc(42.67 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.0663em;
+}
+.terms-p {
+  margin: calc(22.27 * var(--px)) 0 0;
+  font: 400 calc(28 * var(--px))/calc(41 * var(--px)) 'DM Sans', sans-serif;
+  letter-spacing: -0.0083em;
+  text-align: justify;
+}
+.terms-p1 { margin: calc(25.06 * var(--px)) 0 0 calc(5.56 * var(--px)); } /* as in the design: 5.6px in from the rest */
+.terms-sub,
+.terms-sign {
+  margin: calc(22.87 * var(--px)) 0 0;
+  font: italic 700 calc(28 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.0567em;
+}
+.terms-sign {
+  margin: calc(29.57 * var(--px)) calc(8 * var(--px)) 0 0;
+  text-align: right;
+  letter-spacing: -0.0596em;
+}
+/* Wine -> rose -> wine across the text, as in the design. The padding keeps
+   italic overhangs inside the painted area; the margin cancels it in layout. */
+.grad-text {
+  display: inline-block;
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+  background: linear-gradient(90deg, #7b0b23, #af6777 50%, #7b0b23);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-head {
+  position: relative;
+  flex: none;
+  height: calc(103 * var(--px));
+}
+.chat-head::after {
+  content: '';
+  position: absolute;
+  left: calc(17.1 * var(--px));
+  right: calc(16.85 * var(--px));
+  top: calc(99.25 * var(--px));
+  height: calc(3.75 * var(--px));
+  background: #7c0a22;
+}
+.chat-head img,
+.chat-foot > img {
+  position: absolute;
+  display: block;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+.chat-avatar { left: calc(23 * var(--px)); top: calc(11.25 * var(--px)); width: calc(78.5 * var(--px)); }
+.chat-phone { right: calc(137.75 * var(--px)); top: calc(25.75 * var(--px)); width: calc(51 * var(--px)); }
+.chat-video { right: calc(39.75 * var(--px)); top: calc(13.75 * var(--px)); width: calc(71.5 * var(--px)); }
+.chat-title {
+  position: absolute;
+  left: calc(115.8 * var(--px));
+  top: calc(22.9 * var(--px));
+  right: calc(210 * var(--px));
+  overflow: hidden;
+  color: #000;
+  font: 700 calc(40 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.0938em;
+  white-space: pre;
+}
+
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  padding: calc(40.95 * var(--px)) calc(39.75 * var(--px)) calc(14 * var(--px)) calc(38.2 * var(--px));
+}
+.chat-scroll::-webkit-scrollbar { display: none; }
+.bubble {
+  box-sizing: border-box;
+  max-width: min(calc(760 * var(--px)), 85%);
+  font: 400 calc(29.33 * var(--px))/1.302 'DM Sans', sans-serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  flex: none;
+}
+.bubble-match {
+  align-self: flex-start;
+  background: #f6f1e7;
+  color: #000;
+  /* right +1: CSS adds letter-spacing after the last letter */
+  padding: calc(12.1 * var(--px)) calc(39 * var(--px)) calc(15.1 * var(--px)) calc(37.9 * var(--px));
+  border-radius: calc(32.7 * var(--px));
+  letter-spacing: -0.033em;
+  animation: bubble-in 0.22s ease-out both;
+}
+.bubble-me {
+  align-self: flex-end;
+  background: #7b0b23;
+  color: #f6f1e7;
+  padding: calc(15.6 * var(--px)) calc(27.6 * var(--px)) calc(18.7 * var(--px)) calc(36.2 * var(--px));
+  border-radius: calc(36.25 * var(--px));
+  letter-spacing: -0.0077em;
+  animation: bubble-in 0.22s ease-out both;
+}
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(calc(10 * var(--px))); }
+  to { opacity: 1; transform: none; }
+}
+.typing {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--px));
+  height: calc(65.39 * var(--px));
+  padding: 0 calc(32 * var(--px));
+}
+.typing span {
+  width: calc(12 * var(--px));
+  height: calc(12 * var(--px));
+  border-radius: 50%;
+  background: #7c0a22;
+  opacity: 0.35;
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2) { animation-delay: 0.15s; }
+.typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(calc(-8 * var(--px))); opacity: 0.8; }
+}
+
+/* Footer: camera on the left; send on the right, inside the empty message bar
+   or beside the reply buttons. */
+.chat-foot {
+  position: relative;
+  flex: none;
+  padding: 0 calc(27.95 * var(--px)) calc(19.4 * var(--px)) calc(99.7 * var(--px));
+}
+.chat-foot.has-replies { padding-right: calc(110.75 * var(--px)); }
+.chat-camera { left: calc(28 * var(--px)); bottom: calc(25.25 * var(--px)); width: calc(57 * var(--px)); }
+.chat-send { right: calc(51.75 * var(--px)); bottom: calc(29.25 * var(--px)); width: calc(40 * var(--px)); }
+.idle-bar {
+  position: relative;
+  box-sizing: border-box;
+  height: calc(56.44 * var(--px));
+  border: calc(3 * var(--px)) solid #7c0a22;
+  border-radius: calc(28.22 * var(--px));
+}
+.idle-aa {
+  position: absolute;
+  left: calc(23.05 * var(--px));
+  top: calc(4.4 * var(--px));
+  color: #7c0a22;
+  font: 400 calc(29.57 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+.replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(12 * var(--px)) calc(15 * var(--px));
+}
+.reply-pill {
+  flex: 0 1 auto;
+  box-sizing: border-box;
+  min-height: calc(56.44 * var(--px));
+  margin: 0;
+  padding: calc(4.6 * var(--px)) calc(55.5 * var(--px)) calc(7.6 * var(--px));
+  border: calc(3 * var(--px)) solid #7c0a22;
+  border-radius: calc(28.22 * var(--px));
+  background: transparent;
+  color: #7c0a22;
+  font: 400 calc(29.33 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.051em;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+  animation: fade-in 0.25s ease 0.35s both; /* a beat after the match's message lands */
+}
+.reply-pill:last-child { flex-grow: 1; }
+.replies.stacked { flex-direction: column; }
+.reply-pill:active { background: #7c0a22; color: #f6f1e7; transform: scale(0.98); }
+.reply-pill:focus-visible { outline: calc(4 * var(--px)) solid rgba(124, 10, 34, 0.35); outline-offset: 2px; }
+.reply-pill span { display: block; }
+
+/* ---- Thank-you page (not in the PDF; styled to match) ---- */
+.done {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 calc(40 * var(--px)) calc(60 * var(--px));
+  text-align: center;
+}
+.done-title {
+  display: inline-block;
+  margin: 0;
+  padding: 0 calc(30 * var(--px)) calc(12 * var(--px));
+  font: 700 calc(210 * var(--px))/1 'DM Sans', sans-serif;
+  letter-spacing: -0.085em;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #7c0a22, #af6777);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.done-sub {
+  margin: calc(14 * var(--px)) 0 calc(12 * var(--px));
+  color: #7c0a22;
+  font: 700 calc(44 * var(--px))/1.2 'DM Sans', sans-serif;
+  letter-spacing: -0.08em;
+}
+.done-text {
+  max-width: calc(820 * var(--px));
+  margin: 0 auto;
+  color: #3b3737;
+  font: 400 calc(29.33 * var(--px))/1.4 'DM Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Log-out question (LogoutDialog.jsx; not in the PDF, styled like the white boxes) ---- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(35, 4, 12, 0.45);
+  animation: fade-in 0.18s ease both;
+}
+.dialog {
+  box-sizing: border-box;
+  width: min(calc(640 * var(--px)), 100%);
+  padding: calc(40 * var(--px)) calc(48 * var(--px));
+  border: calc(4.5 * var(--px)) solid #7c0a22;
+  border-radius: calc(18 * var(--px));
+  background: #fff;
+  box-shadow: calc(16 * var(--px)) calc(16 * var(--px)) calc(16 * var(--px)) rgba(0, 0, 0, 0.19);
+  animation: dialog-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(calc(12 * var(--px))) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.dialog-title {
+  margin: 0;
+  font: 700 calc(42.67 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.0663em;
+}
+.dialog-text {
+  margin: calc(14 * var(--px)) 0 0;
+  color: #000;
+  font: 400 calc(28 * var(--px))/1.464 'DM Sans', sans-serif;
+  letter-spacing: -0.0083em;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(15 * var(--px));
+  margin-top: calc(32 * var(--px));
+}
+.dialog-btn {
+  min-height: calc(56.44 * var(--px));
+  margin: 0;
+  padding: calc(4.6 * var(--px)) calc(44 * var(--px)) calc(7.6 * var(--px));
+  border: calc(3 * var(--px)) solid #7c0a22;
+  border-radius: calc(28.22 * var(--px));
+  background: transparent;
+  color: #7c0a22;
+  font: 400 calc(29.33 * var(--px))/1.302 'DM Sans', sans-serif;
+  letter-spacing: -0.051em;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+}
+.dialog-btn-go { background: #7b0b23; color: #f6f1e7; }
+.dialog-btn:active { transform: scale(0.98); }
+.dialog-btn:focus-visible { outline: calc(4 * var(--px)) solid rgba(124, 10, 34, 0.35); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Hover tints only where there is a real pointer (taps on phones would leave them stuck). */
+@media (hover: hover) {
+  .cal-title:not(:disabled):hover,
+  .cal-arrow:not(:disabled):hover,
+  .cal-cell:not(:disabled):not(.is-selected):hover { background-color: rgba(124, 10, 34, 0.09); }
+  .zone-light:hover { background-color: rgba(124, 10, 34, 0.07); }
+  .zone-dark:hover { background-color: rgba(255, 255, 255, 0.13); }
+  .zone-photo:hover { background-color: rgba(255, 255, 255, 0.1); }
+  .lift .zone:hover { background-color: transparent; } /* the button itself moves instead */
+  .lift:hover { transform: translateY(-5px) scale(1.035); filter: drop-shadow(0 12px 14px rgba(59, 55, 55, 0.22)); }
+  .lift-soft:hover { transform: scale(1.04); filter: none; }
+  .lift-link:hover { transform: none; filter: none; opacity: 0.7; }
+  .lift:active { transform: scale(0.97); }
+  .lift-link:active { transform: none; opacity: 0.55; }
+  .site-nav button:hover::after { transform: scaleX(1); }
+  .site-nav .nav-icon:hover { opacity: 0.8; transform: translateX(calc(2 * var(--px))); }
+  button.brand:hover { opacity: 0.85; }
+  .reply-pill:hover {
+    background: rgba(124, 10, 34, 0.07);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(124, 10, 34, 0.14);
+  }
+  .reply-pill:active { background: #7c0a22; transform: scale(0.98); box-shadow: none; }
+  .dialog-btn:hover { background-color: rgba(124, 10, 34, 0.07); transform: translateY(-2px); box-shadow: 0 5px 12px rgba(124, 10, 34, 0.14); }
+  .dialog-btn-go:hover { background-color: #640a1d; }
+}
+
+/* Kerning: see the end of mobile.css (loaded after this file). */

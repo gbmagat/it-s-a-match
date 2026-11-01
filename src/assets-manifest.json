@@ -1,0 +1,203 @@
+{
+  "scale": 2,
+  "plates": {
+    "puzzle-tile": "/assets/puzzle-tile.webp",
+    "header-bar": "/assets/header-bar.webp"
+  },
+  "layers": {
+    "logo": {
+      "src": "/assets/logo.webp",
+      "x": 45.5,
+      "y": 24.5,
+      "w": 65.5,
+      "h": 54.5
+    },
+    "landing-button": {
+      "src": "/assets/landing-button.webp",
+      "x": 106.5,
+      "y": 749.0,
+      "w": 338.0,
+      "h": 83.0
+    },
+    "signup-card": {
+      "src": "/assets/signup-card.webp",
+      "x": 397.5,
+      "y": 202.5,
+      "w": 645.0,
+      "h": 677.0
+    },
+    "signup-button": {
+      "src": "/assets/signup-button.webp",
+      "x": 747.0,
+      "y": 785.0,
+      "w": 260.5,
+      "h": 63.5
+    },
+    "swipe-dots": {
+      "src": "/assets/swipe-dots.webp",
+      "x": 919.0,
+      "y": 720.5,
+      "w": 208.0,
+      "h": 238.5
+    },
+    "swipe-dots-top": {
+      "src": "/assets/swipe-dots-top.webp",
+      "x": 293.5,
+      "y": 178.5,
+      "w": 208.5,
+      "h": 238.5
+    },
+    "card-right": {
+      "src": "/assets/card-right.webp",
+      "x": 790.5,
+      "y": 313.0,
+      "w": 381.0,
+      "h": 474.0
+    },
+    "card-left": {
+      "src": "/assets/card-left.webp",
+      "x": 254.5,
+      "y": 313.0,
+      "w": 381.0,
+      "h": 474.0
+    },
+    "swipe-glow": {
+      "src": "/assets/swipe-glow.webp",
+      "x": 246.5,
+      "y": 90.5,
+      "w": 947.5,
+      "h": 933.5
+    },
+    "card-center": {
+      "src": "/assets/card-center.webp",
+      "x": 442.5,
+      "y": 204.5,
+      "w": 555.0,
+      "h": 691.0
+    },
+    "found-heart": {
+      "src": "/assets/found-heart.webp",
+      "x": 345.0,
+      "y": 192.0,
+      "w": 706.0,
+      "h": 703.5
+    },
+    "choose-a-art": {
+      "src": "/assets/choose-a-art.webp",
+      "x": 220.5,
+      "y": 180.0,
+      "w": 557.5,
+      "h": 601.0
+    },
+    "choose-b-art": {
+      "src": "/assets/choose-b-art.webp",
+      "x": 657.5,
+      "y": 180.0,
+      "w": 558.0,
+      "h": 601.0
+    },
+    "itsamatch-a-art": {
+      "src": "/assets/itsamatch-a-art.webp",
+      "x": 358.5,
+      "y": 253.5,
+      "w": 723.0,
+      "h": 448.5
+    },
+    "itsamatch-b-art": {
+      "src": "/assets/itsamatch-b-art.webp",
+      "x": 358.5,
+      "y": 253.5,
+      "w": 723.0,
+      "h": 448.5
+    },
+    "hub-a-art": {
+      "src": "/assets/hub-a-art.webp",
+      "x": 500.5,
+      "y": 219.0,
+      "w": 159.0,
+      "h": 159.0
+    },
+    "hub-b-art": {
+      "src": "/assets/hub-b-art.webp",
+      "x": 500.5,
+      "y": 219.0,
+      "w": 159.0,
+      "h": 159.0
+    },
+    "hub-card-0": {
+      "src": "/assets/hub-card-0.webp",
+      "x": 175.5,
+      "y": 462.0,
+      "w": 335.5,
+      "h": 369.5
+    },
+    "hub-card-1": {
+      "src": "/assets/hub-card-1.webp",
+      "x": 552.5,
+      "y": 462.0,
+      "w": 335.0,
+      "h": 369.5
+    },
+    "hub-card-2": {
+      "src": "/assets/hub-card-2.webp",
+      "x": 929.0,
+      "y": 462.0,
+      "w": 335.5,
+      "h": 369.5
+    },
+    "chat-avatar": {
+      "src": "/assets/chat-avatar.webp",
+      "x": 130.5,
+      "y": 186.0,
+      "w": 78.5,
+      "h": 78.5
+    },
+    "icon-phone": {
+      "src": "/assets/icon-phone.webp",
+      "x": 1144.0,
+      "y": 202.0,
+      "w": 51.0,
+      "h": 54.5
+    },
+    "icon-video": {
+      "src": "/assets/icon-video.webp",
+      "x": 1221.5,
+      "y": 190.0,
+      "w": 71.5,
+      "h": 71.5
+    },
+    "icon-camera": {
+      "src": "/assets/icon-camera.webp",
+      "x": 135.0,
+      "y": 860.0,
+      "w": 57.0,
+      "h": 49.0
+    },
+    "icon-send": {
+      "src": "/assets/icon-send.webp",
+      "x": 1241.0,
+      "y": 870.5,
+      "w": 40.0,
+      "h": 34.5
+    }
+  },
+  "colors": {},
+  "photos": {
+    "photo-hands": {
+      "src": "/assets/photo-hands.webp",
+      "x": -156.64407348632812,
+      "y": 73.05631510416666,
+      "w": 1753.0000305175781,
+      "h": 981.9999999999999,
+      "opacity": 0.18
+    },
+    "photo-picnic": {
+      "src": "/assets/photo-picnic.webp",
+      "x": -119.93128458658853,
+      "y": 47.456705729166664,
+      "w": 1679.9999694824219,
+      "h": 1116.9999999999998,
+      "opacity": 0.18
+    }
+  }
+}

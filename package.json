@@ -1,0 +1,34 @@
+{
+  "name": "its-a-match",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "assets": "python -I tools/build_assets.py",
+    "shots": "node tools/screenshots.mjs",
+    "texts": "python -I tools/build_texts.py",
+    "server": "node --env-file=.env --watch server/index.js",
+    "start": "node --env-file=.env server/index.js",
+    "db:setup": "node --env-file=.env server/setup.js"
+  },
+  "dependencies": {
+    "@fontsource-variable/fraunces": "5.3.0",
+    "@fontsource/dm-sans": "4.5.9",
+    "@fontsource/montserrat": "5.2.8",
+    "express": "5.3.0",
+    "mysql2": "3.24.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.2",
+    "playwright-core": "1.64.1",
+    "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}
